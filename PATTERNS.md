@@ -99,3 +99,16 @@ classDiagram
     SepetDekoratoru <|-- HediyePaketiDekoratoru : Türetir
     Indirim <|-- KargoAdaptoru : Türetir
     AlisverisSepeti ..> Indirim : Kullanır
+
+
+Faz 3: Behavioral (Davranışsal) Örüntüleri
+
+1. Strategy Pattern (Strateji)
+-Nerede Uygulandı: `src/sepet.py` içerisindeki `HesaplamaStratejisi` tabanı ve `AlisverisSepeti.strateji_sec()` metodu.
+-Neden Seçildi: İndirim hesaplama algoritmalarının çalışma anında (runtime) dinamik olarak değiştirilebilmesi ve sepetin bu algoritmalardan tamamen bağımsızlaşması için seçildi.
+- Ne Kazandırdı: OCP'ye tam uyum sağlandı. Yeni bir indirim algoritması eklemek için sepet sınıfının bir satır kodunu bile değiştirmeye gerek kalmadı.
+
+2. Observer Pattern 
+-Nerede Uygulandı: `src/sepet.py` içerisindeki `SepetGozlemcisi` arayüzü ile `StokSistemi` ve `LojistikSistemi` sınıflarında.
+- Neden Seçildi: Alışveriş sepetindeki maliyet/durum güncellemelerini, sepet sınıfını diğer sistemlerine bağımlı kılmadan (loose coupling) dış sistemlere bildirmek için seçildi.
+- Ne Kazandırdı: Sepet sınıfı artık Stok veya Lojistik sınıflarının adını bile bilmeden onları dolaylı olarak tetikleyebiliyor.

@@ -1,10 +1,12 @@
- D) E-TİCARET REFAKTÖR VE TASARIM ÖRÜNTÜLERİ PROJESİ
+# D) E-TİCARET REFAKTÖR VE TASARIM ÖRÜNTÜLERİ PROJESİ
 
 E-ticaret sistemlerinde indirim, kampanya ve lojistik kuralları iş süreçlerine göre sürekli olarak değişkenlik gösterir. Projenin başlangıç (Faz 0) aşamasındaki monolitik ve yoğun `if-elif` blokları barındıran yapısı, Açık/Kapalı Prensibini (OCP) doğrudan ihlal etmekte, kodu son derece kırılganlaştırmakta ve bakımı imkansız hale getirmekteydi. Bu senaryo, söz konusu mimari problemleri tasarım örüntüleri (Design Patterns) yardımıyla çözmek amacıyla seçilmiştir.
 
+---
 
+## 🏗️ Mimari Diyagram (Sınıf Yapısı)
 
-Mimari Diyagram (Sınıf Yapısı)
+Aşağıdaki sınıf diyagramı, projenin 3 faz sonunda ulaştığı nesne yönelimli yapıyı ve örüntülerin birbiriyle olan bağlarını göstermektedir:
 
 ```mermaid
 classDiagram
@@ -42,9 +44,7 @@ classDiagram
 
     SepetGozlemcisi <|-- StokSistemi
     SepetGozlemcisi <|-- LojistikSistemi
-
-
-Proje Çalıştırma ve Detaylar
+🛠️ Proje Çalıştırma ve Detaylar
 Projenin Amacı ve Ne Yaptığı
 Bu projenin temel amacı; başlangıçta tek bir sınıf içerisine sıkışmış olan, SOLID prensiplerine aykırı ve genişletilmesi imkansız olan bir e-ticaret sepet hesaplama motorunu, endüstriyel standartlara uygun kurumsal bir mimariye dönüştürmektir.
 
@@ -64,4 +64,5 @@ Observer (Behavioral): Sepet güncellendiğinde veya nihai tutar netleştiğinde
 Nasıl Çalıştırılır?
 Projenin herhangi bir üçüncü parti kütüphane bağımlılığı yoktur. Sadece yerel Python ortamının kurulu olması yeterlidir. Terminali veya Git Bash ekranını açıp projenin kök dizinine gelerek şu komutu yazıp simülasyon çıktılarını anında izleyebilirsiniz:
 
+Bash
 python src/sepet.py

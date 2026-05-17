@@ -1,0 +1,23 @@
+name: Python E-Commerce Cart CI
+
+on:
+  push:
+    branches: [ main, phase-1, phase-2, phase-3 ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-python-version: '3.10'
+        
+    - name: Run Python script syntax check
+      run: |
+        python src/sepet.py

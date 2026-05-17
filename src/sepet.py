@@ -4,20 +4,20 @@ class Urun:
     def __init__(self, ad: str, fiyat: float):
         self.ad = ad
         self.fiyat = fiyat
+
 class SepetGozlemcisi(ABC):
     @abstractmethod
-    def guncelle(self, net_tulam: float, urunler: list):
+    def guncelle(self, net_toplam: float, urunler: list):
         pass
 
 class StokSistemi(SepetGozlemcisi):
-    def guncelle(self, net_tulam: float, urunler: list):
+    def guncelle(self, net_toplam: float, urunler: list):
         print(f"[STOK SİSTEMİ] Sepetteki {len(urunler)} adet ürün için stok bloke işlemleri tetiklendi.")
 
 class LojistikSistemi(SepetGozlemcisi):
-    def guncelle(self, net_tulam: float, urunler: list):
-        if net_tulam > 500:
-            print(f"[LOJİSTİK SİSTEMİ] Yüksek tutarlı sipariş ({net_tulam} TL). Özel paketleme sırasına alındı.")
-
+    def guncelle(self, net_toplam: float, urunler: list):
+        if net_toplam > 500:
+            print(f"[LOJİSTİK SİSTEMİ] Yüksek tutarlı sipariş ({net_toplam} TL). Özel paketleme sırasına alındı.")
 
 class HesaplamaStratejisi(ABC):
     @abstractmethod
@@ -45,7 +45,6 @@ class TopluAlimIndirimi(HesaplamaStratejisi):
             return brut_toplam - 30
         return brut_toplam
 
-
 class SepetDekoratoru(HesaplamaStratejisi):
     def __init__(self, sarilan_strateji: HesaplamaStratejisi):
         self._sarilan_strateji = sarilan_strateji
@@ -69,56 +68,58 @@ class KargoAdaptoru(HesaplamaStratejisi):
     def hesapla(self, brut_toplam: float, urun_sayisi: int) -> float:
         return brut_toplam + self._harici_servis.sabit_olmayan_maliyet_bul(self._desi)
 
+class IndirimFabrikasi:
+    @staticmethod
+    def indirim_yarat(indirim_turu: str, kupon_kodu: str = "") -> HesaplamaStratejisi:
+        tur = indirim_turu.upper()
+        if tur == "YUZDE":
+            return YuzdeIndirimi()
+        elif tur == "KUPON":
+            return KuponIndirimi(kupon_kodu)
+        elif tur == "TOPLU":
+            return TopluAlimIndirimi()
+        else:
+            raise ValueError(f"Gecersiz indirim turu: {indirim_turu}")
+
 class AlisverisSepeti:
     def __init__(self):
         self._urunler = []
-        self._gozlemciler = [] # Observer listesi
-        self._strateji = YuzdeIndirimi() # Varsayılan Strategy
+        self._gozlemciler = []
+        self._strateji = YuzdeIndirimi()
 
-        def gozlemci_ekle(self, gozlemci: SepetGozlemcisi):
+    def gozlemci_ekle(self, gozlemci: SepetGozlemcisi):
         if gozlemci not in self._gozlemciler:
             self._gozlemciler.append(gozlemci)
 
     def gozlemci_cikar(self, gozlemci: SepetGozlemcisi):
-        self._gozlemciler.remove(gozlemci)
+        if gozlemci in self._gozlemciler:
+            self._gozlemciler.remove(gozlemci)
 
     def gozlemcilere_haber_ver(self, net_toplam: float):
         for gozlemci in self._gozlemciler:
             gozlemci.guncelle(net_toplam, self._urunler)
 
-    
     def strateji_sec(self, yeni_strateji: HesaplamaStratejisi):
         self._strateji = yeni_strateji
 
-    
     def urun_ekle(self, urun: Urun):
         self._urunler.append(urun)
 
     def toplam_hesapla(self) -> float:
         brut_toplam = sum(urun.fiyat for urun in self._urunler)
         urun_sayisi = len(self._urunler)
-        
         net_toplam = self._strateji.hesapla(brut_toplam, urun_sayisi)
         net_toplam = max(0.0, net_toplam)
-       
         self.gozlemcilere_haber_ver(net_toplam)
-        
         return net_toplam
-
 
 if __name__ == "__main__":
     sepet = AlisverisSepeti()
-    
     sepet.gozlemci_ekle(StokSistemi())
     sepet.gozlemci_ekle(LojistikSistemi())
-    
-    sepet.urun_ekle(Urun("Oyuncu Kulaklığı", 450.0))
+    sepet.urun_ekle(Urun("Oyuncu Kulakligi", 450.0))
     sepet.urun_ekle(Urun("Mousepad", 100.0))
-    
-    print("--- 1. Durum: Varsayılan Yüzde İndirimi Stratejisi ---")
     sepet.toplam_hesapla()
-    
-    print("\n--- 2. Durum: Stratejiyi Kupon İndirimi + Hediye Paketi (Decorator) Olarak Değiştirme ---")
     kupon_ve_paket = HediyePaketiDekoratoru(KuponIndirimi("EFSANECUMA"))
     sepet.strateji_sec(kupon_ve_paket)
     sepet.toplam_hesapla()

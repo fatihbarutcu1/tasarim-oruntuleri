@@ -16,8 +16,7 @@ class StokSistemi(SepetGozlemcisi):
 
 class LojistikSistemi(SepetGozlemcisi):
     def guncelle(self, net_toplam: float, urunler: list):
-        if net_toplam > 500:
-            print(f"[LOJİSTİK SİSTEMİ] Yüksek tutarlı sipariş ({net_toplam} TL). Özel paketleme sırasına alındı.")
+        print(f"[LOJİSTİK SİSTEMİ] {net_toplam} TL tutarındaki sepet için sevkiyat ve paketleme hazırlıkları başladı.")
 
 class HesaplamaStratejisi(ABC):
     @abstractmethod
@@ -53,6 +52,9 @@ class SepetDekoratoru(HesaplamaStratejisi):
         return self._sarilan_strateji.hesapla(brut_toplam, urun_sayisi)
 
 class HediyePaketiDekoratoru(SepetDekoratoru):
+    def __init__(self, sarilan_strateji: HesaplamaStratejisi):
+        super().__init__(sarilan_strateji)
+
     def hesapla(self, brut_toplam: float, urun_sayisi: int) -> float:
         return super().hesapla(brut_toplam, urun_sayisi) + 15.0
 
@@ -99,6 +101,9 @@ class AlisverisSepeti:
         for gozlemci in self._gozlemciler:
             gozlemci.guncelle(net_toplam, self._urunler)
 
+    def Crane(self, yeni_strateji: HesaplamaStratejisi):
+        self._strateji = yeni_strateji
+
     def strateji_sec(self, yeni_strateji: HesaplamaStratejisi):
         self._strateji = yeni_strateji
 
@@ -119,7 +124,9 @@ if __name__ == "__main__":
     sepet.gozlemci_ekle(LojistikSistemi())
     sepet.urun_ekle(Urun("Oyuncu Kulakligi", 450.0))
     sepet.urun_ekle(Urun("Mousepad", 100.0))
+    print("--- DURUM 1: Yuzde Indirimi Stratejisi ---")
     sepet.toplam_hesapla()
+    print("\n--- DURUM 2: Kupon + Hediye Paketi Dekoratoru ---")
     kupon_ve_paket = HediyePaketiDekoratoru(KuponIndirimi("EFSANECUMA"))
     sepet.strateji_sec(kupon_ve_paket)
     sepet.toplam_hesapla()

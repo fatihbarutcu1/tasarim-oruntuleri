@@ -1,0 +1,24 @@
+name: Python CI
+
+on:
+  push:
+    branches: [ main, phase-1, phase-2, phase-3 ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Check Syntax
+      run: |
+        python -m py_compile src/sepet.py

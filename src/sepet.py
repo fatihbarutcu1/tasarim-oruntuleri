@@ -1,48 +1,71 @@
 from abc import ABC, abstractmethod
 
+
 class Urun:
     def __init__(self, ad: str, fiyat: float):
         self.ad = ad
         self.fiyat = fiyat
+
 
 class SepetGozlemcisi(ABC):
     @abstractmethod
     def guncelle(self, net_toplam: float, urunler: list):
         pass
 
+
 class StokSistemi(SepetGozlemcisi):
     def guncelle(self, net_toplam: float, urunler: list):
-        print(f"[STOK SİSTEMİ] Sepetteki {len(urunler)} adet ürün için stok bloke işlemleri tetiklendi.")
+        print(f"[STOK SISTEMI] Sepetteki {len(urunler)} adet urun icin stok bloke islemleri tetiklendi.")
+
 
 class LojistikSistemi(SepetGozlemcisi):
     def guncelle(self, net_toplam: float, urunler: list):
-        print(f"[LOJİSTİK SİSTEMİ] {net_toplam} TL tutarındaki sepet için sevkiyat ve paketleme hazırlıkları başladı.")
+        print(f"[LOJISTIK SISTEMI] {net_toplam} TL tutarindaki sepet icin sevkiyat ve paketleme hazirliklari basladi.")
+
 
 class HesaplamaStratejisi(ABC):
     @abstractmethod
     def hesapla(self, brut_toplam: float, urun_sayisi: int) -> float:
         pass
 
+
 class YuzdeIndirimi(HesaplamaStratejisi):
+    YUZDE_INDIRIM_ORANI = 0.10
+
     def hesapla(self, brut_toplam: float, urun_sayisi: int) -> float:
-        return brut_toplam * 0.90
+        return brut_toplam * (1 - self.YUZDE_INDIRIM_ORANI)
+
 
 class KuponIndirimi(HesaplamaStratejisi):
+    KUPON_KURALLARI = {
+        "INDIRIM20": ("sabit", 20),
+        "EFSANECUMA": ("oran", 0.50),
+    }
+
     def __init__(self, kupon_kodu: str):
         self.kupon_kodu = kupon_kodu
 
     def hesapla(self, brut_toplam: float, urun_sayisi: int) -> float:
-        if self.kupon_kodu == "INDIRIM20":
-            return brut_toplam - 20
-        elif self.kupon_kodu == "EFSANECUMA":
-            return brut_toplam * 0.50
+        kural = self.KUPON_KURALLARI.get(self.kupon_kodu)
+        if kural is None:
+            return brut_toplam
+        tur, deger = kural
+        if tur == "sabit":
+            return brut_toplam - deger
+        if tur == "oran":
+            return brut_toplam * deger
         return brut_toplam
 
+
 class TopluAlimIndirimi(HesaplamaStratejisi):
+    MINIMUM_URUN_SAYISI = 3
+    SABIT_INDIRIM_TUTARI = 30
+
     def hesapla(self, brut_toplam: float, urun_sayisi: int) -> float:
-        if urun_sayisi >= 3:
-            return brut_toplam - 30
+        if urun_sayisi >= self.MINIMUM_URUN_SAYISI:
+            return brut_toplam - self.SABIT_INDIRIM_TUTARI
         return brut_toplam
+
 
 class SepetDekoratoru(HesaplamaStratejisi):
     def __init__(self, sarilan_strateji: HesaplamaStratejisi):
@@ -51,16 +74,20 @@ class SepetDekoratoru(HesaplamaStratejisi):
     def hesapla(self, brut_toplam: float, urun_sayisi: int) -> float:
         return self._sarilan_strateji.hesapla(brut_toplam, urun_sayisi)
 
+
 class HediyePaketiDekoratoru(SepetDekoratoru):
-    def __init__(self, sarilan_strateji: HesaplamaStratejisi):
-        super().__init__(sarilan_strateji)
+    PAKET_UCRETI = 15.0
 
     def hesapla(self, brut_toplam: float, urun_sayisi: int) -> float:
-        return super().hesapla(brut_toplam, urun_sayisi) + 15.0
+        return super().hesapla(brut_toplam, urun_sayisi) + self.PAKET_UCRETI
+
 
 class HariciKargoHesaplayici:
+    KARGO_DESI_CARPANI = 12.5
+
     def sabit_olmayan_maliyet_bul(self, desi_agirlik: float) -> float:
-        return desi_agirlik * 12.5
+        return desi_agirlik * self.KARGO_DESI_CARPANI
+
 
 class KargoAdaptoru(HesaplamaStratejisi):
     def __init__(self, harici_servis: HariciKargoHesaplayici, desi: float):
@@ -70,18 +97,19 @@ class KargoAdaptoru(HesaplamaStratejisi):
     def hesapla(self, brut_toplam: float, urun_sayisi: int) -> float:
         return brut_toplam + self._harici_servis.sabit_olmayan_maliyet_bul(self._desi)
 
+
 class IndirimFabrikasi:
     @staticmethod
     def indirim_yarat(indirim_turu: str, kupon_kodu: str = "") -> HesaplamaStratejisi:
         tur = indirim_turu.upper()
         if tur == "YUZDE":
             return YuzdeIndirimi()
-        elif tur == "KUPON":
+        if tur == "KUPON":
             return KuponIndirimi(kupon_kodu)
-        elif tur == "TOPLU":
+        if tur == "TOPLU":
             return TopluAlimIndirimi()
-        else:
-            raise ValueError(f"Gecersiz indirim turu: {indirim_turu}")
+        raise ValueError(f"Gecersiz indirim turu: {indirim_turu}")
+
 
 class AlisverisSepeti:
     def __init__(self):
@@ -101,9 +129,6 @@ class AlisverisSepeti:
         for gozlemci in self._gozlemciler:
             gozlemci.guncelle(net_toplam, self._urunler)
 
-    def Crane(self, yeni_strateji: HesaplamaStratejisi):
-        self._strateji = yeni_strateji
-
     def strateji_sec(self, yeni_strateji: HesaplamaStratejisi):
         self._strateji = yeni_strateji
 
@@ -118,15 +143,31 @@ class AlisverisSepeti:
         self.gozlemcilere_haber_ver(net_toplam)
         return net_toplam
 
+
 if __name__ == "__main__":
     sepet = AlisverisSepeti()
     sepet.gozlemci_ekle(StokSistemi())
     sepet.gozlemci_ekle(LojistikSistemi())
+
     sepet.urun_ekle(Urun("Oyuncu Kulakligi", 450.0))
     sepet.urun_ekle(Urun("Mousepad", 100.0))
-    print("--- DURUM 1: Yuzde Indirimi Stratejisi ---")
-    sepet.toplam_hesapla()
-    print("\n--- DURUM 2: Kupon + Hediye Paketi Dekoratoru ---")
+    sepet.urun_ekle(Urun("Kablosuz Mouse", 250.0))
+
+    print("--- DURUM 1: Yuzde Indirimi Stratejisi (Fabrika ile) ---")
+    sepet.strateji_sec(IndirimFabrikasi.indirim_yarat("YUZDE"))
+    print(f"Net Tutar: {sepet.toplam_hesapla()} TL\n")
+
+    print("--- DURUM 2: Toplu Alim Indirimi (Fabrika ile) ---")
+    sepet.strateji_sec(IndirimFabrikasi.indirim_yarat("TOPLU"))
+    print(f"Net Tutar: {sepet.toplam_hesapla()} TL\n")
+
+    print("--- DURUM 3: Kupon Indirimi + Hediye Paketi (Decorator) ---")
     kupon_ve_paket = HediyePaketiDekoratoru(KuponIndirimi("EFSANECUMA"))
     sepet.strateji_sec(kupon_ve_paket)
-    sepet.toplam_hesapla()
+    print(f"Net Tutar: {sepet.toplam_hesapla()} TL\n")
+
+    print("--- DURUM 4: Harici Kargo Servisi (Adapter) ---")
+    kargo_servisi = HariciKargoHesaplayici()
+    kargo_adaptoru = KargoAdaptoru(kargo_servisi, desi=2.0)
+    sepet.strateji_sec(kargo_adaptoru)
+    print(f"Net Tutar: {sepet.toplam_hesapla()} TL\n")
